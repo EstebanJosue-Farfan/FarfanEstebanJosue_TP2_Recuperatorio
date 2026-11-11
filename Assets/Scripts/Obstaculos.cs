@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Obstaculo : MonoBehaviour
 {
+    public int danio = 20;
+
     Rigidbody rb;
     bool yaGolpeo;
 
@@ -15,10 +17,12 @@ public class Obstaculo : MonoBehaviour
     {
         if (yaGolpeo) return;
 
-        if (c.gameObject.GetComponentInParent<PlayerController>() != null)
+        PlayerHealth vida = c.gameObject.GetComponentInParent<PlayerHealth>();
+        if (vida != null)
         {
             yaGolpeo = true;
-            if (GameManager.Instance != null) GameManager.Instance.Perder();
+            vida.RecibirDanio(danio);
+            Destroy(gameObject);
             return;
         }
 

@@ -10,6 +10,11 @@ public class PlayerController : MonoBehaviour
     public float fuerzaSalto = 6f;
     public float alturaCaida = -10f;
 
+    [Header("Chequeo de suelo (Raycast + LayerMask)")]
+    [Tooltip("Marcar SOLO la capa Ground")]
+    public LayerMask capaSuelo;
+    public float distanciaSuelo = 1.1f;
+
     [Header("Transporte")]
     public Transform puntoTransporte;
     public float radioRecoger = 2f;
@@ -67,7 +72,10 @@ public class PlayerController : MonoBehaviour
 
     bool EstaEnSuelo()
     {
-        return Physics.Raycast(transform.position, Vector3.down, 1.1f, ~0, QueryTriggerInteraction.Ignore);
+        // Raycast hacia abajo filtrando SOLO la capa Ground (no detecta al jugador ni a la caja)
+        bool enSuelo = Physics.Raycast(transform.position, Vector3.down, distanciaSuelo, capaSuelo, QueryTriggerInteraction.Ignore);
+        Debug.DrawRay(transform.position, Vector3.down * distanciaSuelo, enSuelo ? Color.green : Color.red);
+        return enSuelo;
     }
 
     void Recoger()
