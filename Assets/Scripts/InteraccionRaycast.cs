@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Raycast frontal desde el jugador, filtrado por la capa Interactable.
-/// Tecla E: abrir puertas y activar terminales.
-/// </summary>
 public class InteraccionRaycast : MonoBehaviour
 {
     public float distancia = 3f;

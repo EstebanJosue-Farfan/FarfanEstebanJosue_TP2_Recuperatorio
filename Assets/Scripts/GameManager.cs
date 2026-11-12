@@ -6,11 +6,6 @@ using TMPro;
 
 public enum EstadoJuego { Inicio, Jugando, Pausa, Victoria, Derrota }
 
-/// <summary>
-/// Singleton que controla el flujo del juego: Inicio, Jugando, Pausa, Victoria y Derrota.
-/// No contiene lógica del jugador ni de los enemigos: escucha eventos de PlayerHealth
-/// y de SpawnerOleadas (desacoplado).
-/// </summary>
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -114,11 +109,10 @@ public class GameManager : MonoBehaviour
         ActualizarHUD();
     }
 
-    // ---------------- Estados ----------------
     public void CambiarEstado(EstadoJuego nuevo)
     {
         Estado = nuevo;
-        Time.timeScale = (nuevo == EstadoJuego.Jugando) ? 1f : 0f; // pausa = tiempo congelado
+        Time.timeScale = (nuevo == EstadoJuego.Jugando) ? 1f : 0f; 
         Debug.Log($"[GameManager] Estado -> {nuevo}");
         OnEstadoCambio?.Invoke(nuevo);
     }
@@ -134,7 +128,7 @@ public class GameManager : MonoBehaviour
         if (Estado == EstadoJuego.Jugando) CambiarEstado(EstadoJuego.Victoria);
     }
 
-    // ---------------- Puntos ----------------
+ 
     public void SumarPuntos(int cantidad)
     {
         if (!EstaJugando) return;
@@ -143,7 +137,7 @@ public class GameManager : MonoBehaviour
         OnPuntosCambio?.Invoke(Puntos);
     }
 
-    // ---------------- Eventos recibidos ----------------
+  
     void VidaCambio(int actual, int maxima)
     {
         Debug.Log($"[GameManager] Vida del jugador: {actual}/{maxima}");
@@ -155,8 +149,7 @@ public class GameManager : MonoBehaviour
         MostrarMensaje($"¡OLEADA {numero}!", 2.5f);
     }
 
-    // ---------------- HUD ----------------
-    /// <summary>Mensaje temporal en pantalla (funciona aunque el juego esté en pausa).</summary>
+
     public void MostrarMensaje(string mensaje, float duracion = 2f)
     {
         mensajeTemporal = mensaje;

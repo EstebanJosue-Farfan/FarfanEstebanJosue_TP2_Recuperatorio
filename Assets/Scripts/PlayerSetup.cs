@@ -1,11 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Configura automáticamente al jugador: tag, capa, Rigidbody, Collider y todos los scripts
-/// con sus LayerMask. Se ejecuta solo al agregar este componente, o desde el menú de los
-/// tres puntitos del componente -> "Configurar Jugador".
-/// Requiere que existan las capas: Ground, Interactable, Enemy y Player.
-/// </summary>
+
 public class PlayerSetup : MonoBehaviour
 {
     void Reset()

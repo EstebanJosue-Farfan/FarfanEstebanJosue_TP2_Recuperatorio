@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Zona que mata al jugador al tocarla (lava, pozo).
-/// Necesita un Collider con "Is Trigger" activado.
-/// </summary>
 public class ZonaMortal : MonoBehaviour
 {
     void OnTriggerEnter(Collider other)

@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Cámara desde arriba que sigue al jugador y se desplaza hacia donde está el mouse.
-/// </summary>
+
 public class CamaraSeguimiento : MonoBehaviour
 {
     [Tooltip("Si queda vacío busca el objeto con tag Player")]
@@ -34,7 +32,6 @@ public class CamaraSeguimiento : MonoBehaviour
 
         if (jugando && anticipacionMouse > 0f)
         {
-            // Posición del mouse de -1 a 1 respecto al centro de la pantalla
             Vector2 m = new Vector2(Input.mousePosition.x / Screen.width - 0.5f,
                                     Input.mousePosition.y / Screen.height - 0.5f) * 2f;
             m = Vector2.ClampMagnitude(m, 1f);

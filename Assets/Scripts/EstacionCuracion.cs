@@ -1,12 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Estación de Curación (Requisito Extra).
-/// - Cura de forma progresiva (+cantidadCura cada intervaloCura segundos).
-/// - Tiene una carga máxima; al agotarse entra en recarga (cooldown).
-/// - Durante la recarga apaga luz y partículas, cambia de color y avisa por consola y HUD.
-/// Necesita un Collider con "Is Trigger" activado.
-/// </summary>
 public class EstacionCuracion : MonoBehaviour
 {
     [Header("Curación")]

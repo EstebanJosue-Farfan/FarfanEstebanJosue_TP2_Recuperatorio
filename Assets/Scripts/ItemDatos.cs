@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Ítem de datos recolectable. Necesita un Collider con "Is Trigger" activado.
-/// </summary>
+
 public class ItemDatos : MonoBehaviour
 {
     public int puntos = 5;

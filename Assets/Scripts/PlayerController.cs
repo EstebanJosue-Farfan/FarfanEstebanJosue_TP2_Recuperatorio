@@ -1,11 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Movimiento del jugador (vista desde arriba):
-/// - WASD para moverse (relativo a la cámara), Shift para correr, Espacio para saltar.
-/// - El personaje gira para mirar hacia el mouse (apuntado).
-/// - Chequeo de suelo por Raycast filtrado con LayerMask (solo Ground).
-/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
@@ -32,7 +26,7 @@ public class PlayerController : MonoBehaviour
     PlayerHealth vida;
     Vector3 input;
     bool saltar;
-    float multiplicadorZona = 1f; // barro
+    float multiplicadorZona = 1f; 
     Quaternion rotacionObjetivo;
 
     void Awake()
@@ -81,7 +75,7 @@ public class PlayerController : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        // Movimiento relativo a la cámara (arriba en pantalla = adelante)
+
         Vector3 adelante = Vector3.forward;
         Vector3 derecha = Vector3.right;
         if (camara != null)
@@ -110,13 +104,13 @@ public class PlayerController : MonoBehaviour
 
     bool EstaEnSuelo()
     {
-        // Raycast hacia abajo filtrando SOLO la capa Ground (nunca detecta al propio jugador)
+
         bool enSuelo = Physics.Raycast(transform.position, Vector3.down, distanciaSuelo, capaSuelo, QueryTriggerInteraction.Ignore);
         Debug.DrawRay(transform.position, Vector3.down * distanciaSuelo, enSuelo ? Color.green : Color.red);
         return enSuelo;
     }
 
-    /// <summary>Usado por la zona de barro (Opción D). 1 = velocidad normal.</summary>
+
     public void SetMultiplicadorZona(float valor)
     {
         multiplicadorZona = valor;

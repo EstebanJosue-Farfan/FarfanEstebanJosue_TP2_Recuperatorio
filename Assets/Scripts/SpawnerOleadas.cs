@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-/// <summary>
-/// Opción E: generador temporizado de enemigos por oleadas.
-/// Cada X segundos crea una oleada alrededor del jugador (a distancia), sobre el NavMesh.
-/// Cada oleada trae más enemigos. Al sobrevivir la última oleada avisa al GameManager.
-/// </summary>
 public class SpawnerOleadas : MonoBehaviour
 {
+    [Header("Referencias")]
+    [Tooltip("Arrastrá acá al Jugador. Si queda vacío lo busca por el tag Player")]
+    public Transform jugador;
+
     [Header("Enemigo")]
     [Tooltip("Prefab del enemigo (con EnemySetup). Si queda vacío se crea una cápsula roja automáticamente")]
     public GameObject prefabEnemigo;
@@ -25,6 +24,8 @@ public class SpawnerOleadas : MonoBehaviour
     [Header("Zona de aparición (alrededor del jugador)")]
     public float distanciaMinima = 18f;
     public float distanciaMaxima = 28f;
+    [Tooltip("Qué tan lejos (en metros) busca el NavMesh desde cada punto elegido")]
+    public float radioBusquedaNavMesh = 8f;
 
     public int OleadaActual { get; private set; }
     public float TiempoParaSiguiente { get; private set; }
@@ -35,7 +36,6 @@ public class SpawnerOleadas : MonoBehaviour
     public event Action OnSupervivenciaCompletada;
 
     readonly List<Enemigo> vivos = new List<Enemigo>();
-    Transform jugador;
     bool completado;
 
     void OnEnable()  { Enemigo.OnEnemigoMuerto += QuitarEnemigo; }
@@ -43,9 +43,16 @@ public class SpawnerOleadas : MonoBehaviour
 
     void Start()
     {
-        GameObject p = GameObject.FindGameObjectWithTag("Player");
-        if (p != null) jugador = p.transform;
-        else Debug.LogWarning("[SpawnerOleadas] No se encontró el jugador (tag Player)");
+        if (jugador == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) jugador = p.transform;
+        }
+
+        if (jugador != null)
+            Debug.Log($"[SpawnerOleadas] Jugador: '{jugador.name}' en {jugador.position}");
+        else
+            Debug.LogWarning("[SpawnerOleadas] No se encontró el jugador. Arrastralo al campo Jugador");
 
         TiempoParaSiguiente = retrasoPrimeraOleada;
     }
@@ -84,20 +91,27 @@ public class SpawnerOleadas : MonoBehaviour
             if (CrearEnemigo()) creados++;
         }
 
-        Debug.Log($"[SpawnerOleadas] Oleada {OleadaActual}: {creados} enemigos creados");
+        Debug.Log($"[SpawnerOleadas] Oleada {OleadaActual}: {creados} enemigos creados cerca de {jugador.position}");
         OnOleadaIniciada?.Invoke(OleadaActual);
     }
 
     bool CrearEnemigo()
     {
-        for (int intento = 0; intento < 10; intento++)
+        const int intentos = 20;
+        for (int intento = 0; intento < intentos; intento++)
         {
+            // En los últimos intentos prueba cada vez más cerca del jugador
+            float factor = 1f - (float)intento / intentos * 0.7f;
+            float distancia = UnityEngine.Random.Range(distanciaMinima, distanciaMaxima) * factor;
             float angulo = UnityEngine.Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            float distancia = UnityEngine.Random.Range(distanciaMinima, distanciaMaxima);
             Vector3 punto = jugador.position + new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo)) * distancia;
 
-            // Busca el punto del NavMesh más cercano (para que aparezca sobre el terreno caminable)
-            if (!NavMesh.SamplePosition(punto, out NavMeshHit hit, 5f, NavMesh.AllAreas)) continue;
+            // Usa la altura del terreno en ese punto (por si el jugador está en una plataforma alta)
+            Terrain terreno = Terrain.activeTerrain;
+            if (terreno != null)
+                punto.y = terreno.SampleHeight(punto) + terreno.transform.position.y;
+
+            if (!NavMesh.SamplePosition(punto, out NavMeshHit hit, radioBusquedaNavMesh, NavMesh.AllAreas)) continue;
 
             GameObject go = prefabEnemigo != null
                 ? Instantiate(prefabEnemigo, hit.position + Vector3.up * 0.1f, Quaternion.identity)
@@ -137,10 +151,16 @@ public class SpawnerOleadas : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        GameObject p = GameObject.FindGameObjectWithTag("Player");
-        if (p == null) return;
+        Transform centro = jugador;
+        if (centro == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) centro = p.transform;
+        }
+        if (centro == null) return;
+
         Gizmos.color = Color.magenta;
-        Gizmos.DrawWireSphere(p.transform.position, distanciaMinima);
-        Gizmos.DrawWireSphere(p.transform.position, distanciaMaxima);
+        Gizmos.DrawWireSphere(centro.position, distanciaMinima);
+        Gizmos.DrawWireSphere(centro.position, distanciaMaxima);
     }
 }

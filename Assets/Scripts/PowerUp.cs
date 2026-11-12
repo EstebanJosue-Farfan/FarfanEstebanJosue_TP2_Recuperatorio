@@ -1,11 +1,6 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Power-up de vida: al tocarlo, el jugador herido recupera vida.
-/// Después desaparece y vuelve a aparecer tras un tiempo de recarga.
-/// Necesita un Collider con "Is Trigger" activado.
-/// </summary>
 public class PowerUp : MonoBehaviour
 {
     public int cantidadCura = 25;

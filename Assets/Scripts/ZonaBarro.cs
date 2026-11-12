@@ -1,9 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Opción D: zona de barro. Reduce la velocidad del jugador al entrar y la restablece al salir.
-/// Necesita un Collider con "Is Trigger" activado.
-/// </summary>
+
 public class ZonaBarro : MonoBehaviour
 {
     [Range(0.1f, 1f)]

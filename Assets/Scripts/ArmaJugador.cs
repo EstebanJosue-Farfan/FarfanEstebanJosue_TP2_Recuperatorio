@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Arma principal por Raycast. Mantener click izquierdo para disparar hacia donde mira el jugador (el mouse).
-/// </summary>
 public class ArmaJugador : MonoBehaviour
 {
     public int danio = 10;

@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Puerta que se abre/cierra al interactuar.
-/// Poné este script en un objeto vacío ubicado en la BISAGRA, con el cubo de la puerta como hijo.
-/// El cubo hijo debe estar en la capa Interactable.
-/// </summary>
 public class Puerta : MonoBehaviour, IInteractuable
 {
     public float anguloApertura = 90f;

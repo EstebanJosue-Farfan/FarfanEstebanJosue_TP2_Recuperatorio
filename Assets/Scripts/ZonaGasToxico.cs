@@ -1,9 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Opción F: zona de gas tóxico. Resta vida de a poco mientras el jugador esté dentro.
-/// Necesita un Collider con "Is Trigger" activado.
-/// </summary>
+
 public class ZonaGasToxico : MonoBehaviour
 {
     public int danioPorTick = 5;
@@ -33,7 +30,6 @@ public class ZonaGasToxico : MonoBehaviour
         if (jugadorDentro == null || Time.time < proximoTick) return;
         proximoTick = Time.time + intervalo;
 
-        // El gas tiene su propio ritmo, por eso ignora la inmunidad de golpes
         jugadorDentro.RecibirDanio(danioPorTick, true);
     }
 }

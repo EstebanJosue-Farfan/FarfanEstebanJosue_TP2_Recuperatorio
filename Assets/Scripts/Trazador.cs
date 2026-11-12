@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Crea por código la línea que se ve al disparar (así no hay que configurarla a mano).
-/// </summary>
+
 public static class Trazador
 {
     public static LineRenderer Crear(Transform padre, Color color, float ancho)

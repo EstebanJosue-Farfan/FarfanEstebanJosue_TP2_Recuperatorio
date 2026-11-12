@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Terminal de datos: al activarla con el Raycast descarga datos (da puntos una sola vez).
-/// Debe estar en la capa Interactable.
-/// </summary>
 public class TerminalDatos : MonoBehaviour, IInteractuable
 {
     public int puntos = 10;

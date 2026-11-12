@@ -1,9 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Opción A: arma de aturdimiento por Raycast. Click derecho dispara hacia donde mira el jugador;
-/// si impacta un Enemigo lo paraliza unos segundos.
-/// </summary>
+
 public class ArmaAturdidora : MonoBehaviour
 {
     public float alcance = 20f;
