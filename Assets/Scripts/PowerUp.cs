@@ -1,9 +1,16 @@
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Power-up de vida: al tocarlo, el jugador herido recupera vida.
+/// Después desaparece y vuelve a aparecer tras un tiempo de recarga.
+/// Necesita un Collider con "Is Trigger" activado.
+/// </summary>
 public class PowerUp : MonoBehaviour
 {
-    public float recarga = 10f;
+    public int cantidadCura = 25;
+    public float recarga = 15f;
+    public float velocidadGiro = 90f;
 
     Renderer rend;
     Collider col;
@@ -14,25 +21,35 @@ public class PowerUp : MonoBehaviour
         col = GetComponent<Collider>();
     }
 
+    void Update()
+    {
+        transform.Rotate(Vector3.up, velocidadGiro * Time.deltaTime, Space.World);
+    }
+
     void OnTriggerEnter(Collider other) { Intentar(other); }
     void OnTriggerStay(Collider other) { Intentar(other); }
 
     void Intentar(Collider other)
     {
-        if (!col.enabled) return;
-        PlayerController p = other.GetComponentInParent<PlayerController>();
-        if (p == null || p.BoostActivo) return;
+        if (col == null || !col.enabled) return;
+        if (!other.CompareTag("Player")) return;
 
-        p.ActivarBoost();
+        PlayerHealth vida = other.GetComponentInParent<PlayerHealth>();
+        if (vida == null || !vida.EstaHerido) return; // con vida llena no lo gasta
+
+        int curado = vida.Curar(cantidadCura);
+        Debug.Log($"[PowerUp] +{curado} de vida");
+        if (GameManager.Instance != null) GameManager.Instance.MostrarMensaje($"+{curado} VIDA", 1.5f);
+
         StartCoroutine(Recargar());
     }
 
     IEnumerator Recargar()
     {
-        rend.enabled = false;
+        if (rend != null) rend.enabled = false;
         col.enabled = false;
         yield return new WaitForSeconds(recarga);
-        rend.enabled = true;
+        if (rend != null) rend.enabled = true;
         col.enabled = true;
     }
 }

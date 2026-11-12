@@ -1,41 +1,72 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using TMPro;
 
+public enum EstadoJuego { Inicio, Jugando, Pausa, Victoria, Derrota }
+
+/// <summary>
+/// Singleton que controla el flujo del juego: Inicio, Jugando, Pausa, Victoria y Derrota.
+/// No contiene lógica del jugador ni de los enemigos: escucha eventos de PlayerHealth
+/// y de SpawnerOleadas (desacoplado).
+/// </summary>
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
 
+    [Header("Referencias (si quedan vacías se buscan solas)")]
     public PlayerHealth jugador;
-    public float tiempoSupervivencia = 120f;
-    public GameObject plataformaMeta;
-    public SpawnerObstaculos spawner;
-    public TextMeshProUGUI textoTiempo;
-    public TextMeshProUGUI textoMensaje;
-    public TextMeshProUGUI textoBoost;
+    public SpawnerOleadas spawnerOleadas;
 
-    float restante;
-    bool terminado, metaAbierta;
+    [Header("UI (TextMeshPro)")]
+    [Tooltip("Vida y puntos")]
+    [FormerlySerializedAs("textoTiempo")] public TextMeshProUGUI textoHUD;
+    [Tooltip("Mensajes grandes (inicio, pausa, victoria, avisos)")]
+    public TextMeshProUGUI textoMensaje;
+    [Tooltip("Información de la oleada")]
+    [FormerlySerializedAs("textoBoost")] public TextMeshProUGUI textoOleada;
+
+    public EstadoJuego Estado { get; private set; }
+    public int Puntos { get; private set; }
+    public bool EstaJugando => Estado == EstadoJuego.Jugando;
+
+    public event Action<EstadoJuego> OnEstadoCambio;
+    public event Action<int> OnPuntosCambio;
+
+    string mensajeTemporal = "";
+    float mensajeHasta;
 
     void Awake()
     {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        Time.timeScale = 1f;
     }
 
     void Start()
     {
-        restante = tiempoSupervivencia;
-        plataformaMeta.SetActive(false);
-        textoMensaje.text = "";
-        textoBoost.text = "";
+        if (jugador == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) jugador = p.GetComponent<PlayerHealth>();
+        }
+        if (spawnerOleadas == null) spawnerOleadas = FindFirstObjectByType<SpawnerOleadas>();
 
-        // Escucha los eventos del jugador (desacoplado)
         if (jugador != null)
         {
             jugador.OnVidaCambio += VidaCambio;
             jugador.OnMuerte += Perder;
         }
+        else Debug.LogWarning("[GameManager] No se encontró el PlayerHealth del jugador");
+
+        if (spawnerOleadas != null)
+        {
+            spawnerOleadas.OnOleadaIniciada += OleadaIniciada;
+            spawnerOleadas.OnSupervivenciaCompletada += Victoria;
+        }
+        else Debug.LogWarning("[GameManager] No se encontró un SpawnerOleadas en la escena");
+
+        CambiarEstado(EstadoJuego.Inicio);
     }
 
     void OnDestroy()
@@ -45,78 +76,118 @@ public class GameManager : MonoBehaviour
             jugador.OnVidaCambio -= VidaCambio;
             jugador.OnMuerte -= Perder;
         }
+        if (spawnerOleadas != null)
+        {
+            spawnerOleadas.OnOleadaIniciada -= OleadaIniciada;
+            spawnerOleadas.OnSupervivenciaCompletada -= Victoria;
+        }
     }
 
     void Update()
     {
-        if (terminado)
+        switch (Estado)
         {
-            if (Input.GetKeyDown(KeyCode.R))
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            return;
+            case EstadoJuego.Inicio:
+                if (Input.GetKeyDown(KeyCode.Return)) CambiarEstado(EstadoJuego.Jugando);
+                break;
+
+            case EstadoJuego.Jugando:
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
+                    CambiarEstado(EstadoJuego.Pausa);
+                break;
+
+            case EstadoJuego.Pausa:
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
+                    CambiarEstado(EstadoJuego.Jugando);
+                break;
+
+            case EstadoJuego.Victoria:
+            case EstadoJuego.Derrota:
+                if (Input.GetKeyDown(KeyCode.R))
+                {
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                }
+                break;
         }
 
-        if (!metaAbierta)
-        {
-            restante -= Time.deltaTime;
-            if (restante <= 0f) { restante = 0f; AbrirMeta(); }
-        }
         ActualizarHUD();
     }
 
-    void ActualizarHUD()
+    // ---------------- Estados ----------------
+    public void CambiarEstado(EstadoJuego nuevo)
     {
-        string vida = jugador != null ? $"Vida: {jugador.VidaActual}/{jugador.vidaMaxima}" : "";
-        if (metaAbierta)
-        {
-            textoTiempo.text = $"{vida}   META ABIERTA";
-        }
-        else
-        {
-            int m = Mathf.FloorToInt(restante / 60f);
-            int s = Mathf.FloorToInt(restante % 60f);
-            textoTiempo.text = $"{vida}   Sobreviví: {m:00}:{s:00}";
-        }
+        Estado = nuevo;
+        Time.timeScale = (nuevo == EstadoJuego.Jugando) ? 1f : 0f; // pausa = tiempo congelado
+        Debug.Log($"[GameManager] Estado -> {nuevo}");
+        OnEstadoCambio?.Invoke(nuevo);
     }
 
+    public void Perder()
+    {
+        if (Estado == EstadoJuego.Jugando || Estado == EstadoJuego.Pausa)
+            CambiarEstado(EstadoJuego.Derrota);
+    }
+
+    public void Victoria()
+    {
+        if (Estado == EstadoJuego.Jugando) CambiarEstado(EstadoJuego.Victoria);
+    }
+
+    // ---------------- Puntos ----------------
+    public void SumarPuntos(int cantidad)
+    {
+        if (!EstaJugando) return;
+        Puntos += cantidad;
+        Debug.Log($"[GameManager] Puntos: {Puntos}");
+        OnPuntosCambio?.Invoke(Puntos);
+    }
+
+    // ---------------- Eventos recibidos ----------------
     void VidaCambio(int actual, int maxima)
     {
         Debug.Log($"[GameManager] Vida del jugador: {actual}/{maxima}");
     }
 
-    void AbrirMeta()
+    void OleadaIniciada(int numero)
     {
-        metaAbierta = true;
-        plataformaMeta.SetActive(true);
-        textoMensaje.text = "¡Sobreviviste!\nLlevá la caja a la meta";
-        Invoke(nameof(LimpiarMensaje), 4f);
+        Debug.Log($"[GameManager] Comenzó la oleada {numero}");
+        MostrarMensaje($"¡OLEADA {numero}!", 2.5f);
     }
 
-    void LimpiarMensaje()
+    // ---------------- HUD ----------------
+    /// <summary>Mensaje temporal en pantalla (funciona aunque el juego esté en pausa).</summary>
+    public void MostrarMensaje(string mensaje, float duracion = 2f)
     {
-        if (!terminado) textoMensaje.text = "";
+        mensajeTemporal = mensaje;
+        mensajeHasta = Time.unscaledTime + duracion;
     }
 
-    public void MostrarBoost(bool activo)
+    void ActualizarHUD()
     {
-        textoBoost.text = activo ? "¡BOOST DE VELOCIDAD!" : "";
-    }
+        if (textoHUD != null && jugador != null)
+            textoHUD.text = $"Vida: {jugador.VidaActual}/{jugador.vidaMaxima}   Puntos: {Puntos}";
 
-    public void Perder()
-    {
-        if (terminado) return;
-        terminado = true;
-        spawner.Detener();
-        textoMensaje.text = "¡PERDISTE!\nPresioná R para reiniciar";
-        Time.timeScale = 0f;
-    }
+        if (textoOleada != null && spawnerOleadas != null)
+        {
+            float t = Mathf.Max(0f, spawnerOleadas.TiempoParaSiguiente);
+            string reloj = $"{Mathf.FloorToInt(t / 60f):0}:{Mathf.FloorToInt(t % 60f):00}";
+            string cuando = spawnerOleadas.UltimaOleadaLanzada ? $"Resistí: {reloj}" : $"Próxima: {reloj}";
+            textoOleada.text = $"Oleada {spawnerOleadas.OleadaActual}/{spawnerOleadas.oleadasParaGanar}   {cuando}   Enemigos: {spawnerOleadas.EnemigosVivos}";
+        }
 
-    public void Victoria()
-    {
-        if (terminado) return;
-        terminado = true;
-        spawner.Detener();
-        textoMensaje.text = "¡VICTORIA!\nPresioná R para reiniciar";
-        Time.timeScale = 0f;
+        if (textoMensaje == null) return;
+
+        string mensajeEstado = Estado switch
+        {
+            EstadoJuego.Inicio   => "SUPERVIVENCIA\nPresioná ENTER para comenzar",
+            EstadoJuego.Pausa    => "PAUSA\n(ESC o P para continuar)",
+            EstadoJuego.Victoria => "¡SOBREVIVISTE!\nPresioná R para reiniciar",
+            EstadoJuego.Derrota  => "¡PERDISTE!\nPresioná R para reiniciar",
+            _ => ""
+        };
+
+        bool hayTemporal = Estado == EstadoJuego.Jugando && Time.unscaledTime < mensajeHasta;
+        textoMensaje.text = hayTemporal ? mensajeTemporal : mensajeEstado;
     }
 }

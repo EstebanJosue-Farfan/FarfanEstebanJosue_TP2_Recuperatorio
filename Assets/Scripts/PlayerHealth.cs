@@ -1,6 +1,10 @@
 using System;
 using UnityEngine;
 
+/// <summary>
+/// Salud del jugador con tiempo de inmunidad entre golpes.
+/// Solo avisa por eventos; el GameManager decide qué pasa al morir.
+/// </summary>
 public class PlayerHealth : MonoBehaviour
 {
     public int vidaMaxima = 100;
@@ -11,7 +15,7 @@ public class PlayerHealth : MonoBehaviour
     public bool EstaMuerto => VidaActual <= 0;
     public bool EstaHerido => VidaActual < vidaMaxima;
 
-    public event Action<int, int> OnVidaCambio;
+    public event Action<int, int> OnVidaCambio; // (actual, máxima)
     public event Action OnMuerte;
 
     float ultimoGolpe = -999f;
@@ -21,6 +25,7 @@ public class PlayerHealth : MonoBehaviour
         VidaActual = vidaMaxima;
     }
 
+    /// <summary>Resta vida. Devuelve true si el daño se aplicó.</summary>
     public bool RecibirDanio(int cantidad, bool ignorarInmunidad = false)
     {
         if (EstaMuerto || cantidad <= 0) return false;
@@ -35,6 +40,7 @@ public class PlayerHealth : MonoBehaviour
         return true;
     }
 
+    /// <summary>Suma vida. Devuelve cuánto curó realmente.</summary>
     public int Curar(int cantidad)
     {
         if (EstaMuerto || cantidad <= 0) return 0;
@@ -45,6 +51,7 @@ public class PlayerHealth : MonoBehaviour
         return curado;
     }
 
+    /// <summary>Muerte instantánea (caer al vacío).</summary>
     public void MatarInstantaneo()
     {
         if (EstaMuerto) return;
