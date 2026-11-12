@@ -9,6 +9,8 @@
 | Versión de Unity | 6000.5.7f1 |
 | Repositorio | FarfanEstebanJosue_TP2_Recuperatorio |
 
+**Para jugar:** abrir el proyecto con Unity 6. La escena del juego (`Assets/Scenes/SampleScene.unity`) se abre automáticamente; si no, abrirla desde la carpeta `Assets/Scenes`.
+
 ## Descripción
 
 Shooter 3D con vista desde arriba sobre un terreno con desniveles y texturas. Cada 30 segundos aparece una oleada de enemigos alrededor del jugador, a distancia. Los enemigos patrullan con un campo de visión visible; si el jugador entra en él (o les dispara), lo persiguen y lo atacan. Para ganar hay que sobrevivir 5 oleadas. Cada enemigo eliminado suma puntos.
